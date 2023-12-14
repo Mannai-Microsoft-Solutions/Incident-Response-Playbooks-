@@ -21,7 +21,7 @@ After deployment, you can run this playbook manually on an alert or attach it to
 
 ### Dismiss-AADRiskyUser
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAzure-Sentinel%2Fmaster%2FPlaybooks%2FDismiss-AADRiskyUser%2Falert-trigger%2Fazuredeploy.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAzure-Sentinel%2Fmaster%2FSolutions%2FMicrosoft%2520Entra%2520ID%2520Protection%2FPlaybooks%2FDismiss-EntraIDRiskyUser%2FDismiss-EntraIDRisky-Userincident-trigger%2Fazuredeploy.json)
 
 ## Prerequisites
 
