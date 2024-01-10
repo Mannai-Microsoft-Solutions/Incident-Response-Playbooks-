@@ -1,3 +1,4 @@
+# Connect-AzureAD
 $MIGuid = "<Enter your managed identity guid here>"
 $MI = Get-AzureADServicePrincipal -ObjectId $MIGuid
 
