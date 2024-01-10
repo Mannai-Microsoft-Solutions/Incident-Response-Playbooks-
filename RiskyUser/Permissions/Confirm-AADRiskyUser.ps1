@@ -19,6 +19,4 @@ if ($null -eq $role) {
 
 Add-AzureADDirectoryRoleMember -ObjectId $role.ObjectId -RefObjectId $MI.ObjectID
 
-New-AzRoleAssignment -ObjectId $MIGuid `
-    -RoleDefinitionName $roleName `
-    -Scope /subscriptions/$SubscriptionId/resourcegroups/$ResourceGroup
+New-AzRoleAssignment -ObjectId $MIGuid -RoleDefinitionName $roleName -Scope /subscriptions/$SubscriptionId/resourcegroups/$ResourceGroup
