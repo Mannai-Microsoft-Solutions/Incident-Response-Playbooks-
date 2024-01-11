@@ -1,5 +1,10 @@
+param(
+    [Parameter(Mandatory = $true)]$SubscriptionId,
+    [Parameter(Mandatory = $true)]$ResourceGroup,
+    [Parameter(Mandatory = $true)]$MIGuid
+)
+
 # Connect-AzureAD
-$MIGuid = "<Enter your managed identity guid here>"
 $MI = Get-AzureADServicePrincipal -ObjectId $MIGuid
 
 $GraphAppId = "00000003-0000-0000-c000-000000000000"
