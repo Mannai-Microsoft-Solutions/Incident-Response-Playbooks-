@@ -1,5 +1,5 @@
-# Last log Revived Health Push Notification Solution
-The Logic App leverages  underlying queries to provide you with an option to configure “Push notifications” to e-mail or a Microsoft Teams channel based on user defined Last log Revived by table as well as time since the last “Heartbeat” from Virtual Machines connected to the workspace.
+# Last log Recived Health Push Notification Solution
+The Logic App leverages  underlying queries to provide you with an option to configure “Push notifications” to e-mail or a Microsoft Teams channel based on user defined Last log Recived by table as well as time since the last “Heartbeat” from Virtual Machines connected to the workspace.
 
 **Since the Logic App is being deployed from an ARM template you will need to make connections to Azure Monitor, Office 365 and Teams before the Logic App can work in your environment.**
 
