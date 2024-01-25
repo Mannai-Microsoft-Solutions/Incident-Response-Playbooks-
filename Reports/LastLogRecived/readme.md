@@ -32,3 +32,7 @@ Heartbeat
 ```
 
 ![image](https://github.com/Mannai-Microsoft-Solutions/Incident-Response-Playbooks/assets/141730662/ec6ceeb4-2e03-4ab0-9450-40f056dfcb93)
+
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMannai-Microsoft-Solutions%2FIncident-Response-Playbooks%2Fmain%2FReports%2FLastLogRecived%2Fazuredeploy.json" target="_blank">
+    <img src="https://aka.ms/deploytoazurebutton"/>
+</a>
