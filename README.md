@@ -1,4 +1,4 @@
-# Incident-Response-Playbooks-
+# Incident-Response-Playbooks
 
 SOC analysts are typically inundated with security alerts and incidents on a regular basis, at volumes so large that available personnel are overwhelmed. This results all too often in situations where many alerts are ignored and many incidents aren't investigated, leaving the organization vulnerable to attacks that go unnoticed.
 
