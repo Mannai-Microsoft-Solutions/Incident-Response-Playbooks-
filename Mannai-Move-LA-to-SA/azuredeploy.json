@@ -1,0 +1,499 @@
+{
+    "$schema":  "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion":  "1.0.0.0",
+    "parameters":  {
+        "PlaybookName":  {
+            "defaultValue":  "Mannai-Move-LogAnalytics-to-Storage",
+            "type":  "string"
+        },
+        "WorkspaceName": {
+            "type": "String"
+        },
+        "WorkspaceSubscription": {
+            "defaultValue": "Your subscription id",
+            "type": "String"
+        },
+        "WorkspaceResourceGroup": {
+            "type": "String"
+        }
+    },
+    "variables":  {
+        "AzureblobConnectionName":  "[concat('Azureblob-', parameters('PlaybookName'))]",
+        "AzuremonitorlogsConnectionName":  "[concat('Azuremonitorlogs-', parameters('PlaybookName'))]"
+    },
+    "resources":  [
+        {
+            "properties":  {
+                "provisioningState":  "Succeeded",
+                "state":  "Enabled",
+                "definition":  {
+                    "$schema":  "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion":  "1.0.0.0",
+                    "parameters":  {
+                        "$connections":  {
+                            "defaultValue":  {
+                            },
+                            "type":  "Object"
+                        }
+                    },
+                    "triggers":  {
+                        "Recurrence":  {
+                            "recurrence":  {
+                                "frequency":  "Day",
+                                "interval":  1
+                            },
+                            "evaluatedRecurrence":  {
+                                "frequency":  "Day",
+                                "interval":  1
+                            },
+                            "type":  "Recurrence"
+                        }
+                    },
+                    "actions":  {
+                        "Compose_-_for_End_date":  {
+                            "runAfter":  {
+                                "Initialize_StartDate_variable":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "Compose",
+                            "inputs":  "@add(variables('LastDate'),1)"
+                        },
+                        "Compose_Table_Names":  {
+                            "runAfter":  {
+                                "Run_query_and_list_results":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "Compose",
+                            "inputs":  "@body('Run_query_and_list_results')"
+                        },
+                        "Create_blob_(V2)":  {
+                            "runAfter":  {
+                                "Increment_variable_2":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "ApiConnection",
+                            "inputs":  {
+                                "body":  "@variables('LastDate')",
+                                "headers":  {
+                                    "ReadFileMetadataFromServer":  true
+                                },
+                                "host":  {
+                                    "connection":  {
+                                        "name":  "@parameters('$connections')['azureblob']['connectionId']"
+                                    }
+                                },
+                                "method":  "post",
+                                "path":  "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
+                                "queries":  {
+                                    "folderPath":  "logicappruntimes",
+                                    "name":  "lastlog.txt",
+                                    "queryParametersSingleEncoded":  true
+                                }
+                            },
+                            "runtimeConfiguration":  {
+                                "contentTransfer":  {
+                                    "transferMode":  "Chunked"
+                                }
+                            }
+                        },
+                        "For_each":  {
+                            "foreach":  "@body('Parse_JSON')?['value']",
+                            "actions":  {
+                                "Set_variable":  {
+                                    "runAfter":  {
+                                        "Until":  [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type":  "SetVariable",
+                                    "inputs":  {
+                                        "name":  "HoursCount",
+                                        "value":  0
+                                    }
+                                },
+                                "Until":  {
+                                    "actions":  {
+                                        "Compose":  {
+                                            "runAfter":  {
+                                                "Run_query_and_list_results_2":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "Compose",
+                                            "inputs":  "@body('Run_query_and_list_results_2')?['value']"
+                                        },
+                                        "Create_blob":  {
+                                            "runAfter":  {
+                                                "Compose":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "ApiConnection",
+                                            "inputs":  {
+                                                "body":  "@outputs('Compose')",
+                                                "host":  {
+                                                    "connection":  {
+                                                        "name":  "@parameters('$connections')['azureblob']['connectionId']"
+                                                    }
+                                                },
+                                                "method":  "post",
+                                                "path":  "/datasets/default/files",
+                                                "queries":  {
+                                                    "folderPath":  "/my-container/@{items('For_each')?['DataType']}",
+                                                    "name":  "@{items('For_each')?['DataType']}-@{variables('StartDate')}-@{variables('HoursCount')}.json",
+                                                    "queryParametersSingleEncoded":  true
+                                                }
+                                            },
+                                            "runtimeConfiguration":  {
+                                                "contentTransfer":  {
+                                                    "transferMode":  "Chunked"
+                                                }
+                                            }
+                                        },
+                                        "Increment_variable":  {
+                                            "runAfter":  {
+                                                "Create_blob":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "IncrementVariable",
+                                            "inputs":  {
+                                                "name":  "HoursCount",
+                                                "value":  1
+                                            }
+                                        },
+                                        "Run_query_and_list_results_2":  {
+                                            "runAfter":  {
+                                            },
+                                            "type":  "ApiConnection",
+                                            "inputs":  {
+                                                "body":  "@{items('For_each')?['DataType']}\n| where ingestion_time() between(datetime(@{formatDateTime(addHours(variables('StartDate'),variables('HoursCount')))}) .. datetime(@{formatDateTime(addHours(variables('StartDate'),add(int(variables('HoursCount')),1)))}))",
+                                                "host":  {
+                                                    "connection":  {
+                                                        "name":  "@parameters('$connections')['azuremonitorlogs_1']['connectionId']"
+                                                    }
+                                                },
+                                                "method":  "post",
+                                                "path":  "/queryData",
+                                                "queries":  {
+                                                    "resourcegroups": "[parameters('WorkspaceResourceGroup')]",
+                                                    "resourcename": "[parameters('WorkspaceName')]",
+                                                    "resourcetype": "Log Analytics Workspace",
+                                                    "subscriptions": "[parameters('WorkspaceSubscription')]",
+                                                    "timerange": "between(datetime(@{formatDateTime(addHours(variables('StartDate'),variables('HoursCount')))}) .. datetime(@{formatDateTime(addHours(variables('StartDate'),add(int(variables('HoursCount')),1)))})"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "runAfter":  {
+                                    },
+                                    "expression":  "@equals(variables('HoursCount'), 24)",
+                                    "limit":  {
+                                        "count":  60,
+                                        "timeout":  "PT1H"
+                                    },
+                                    "type":  "Until"
+                                }
+                            },
+                            "runAfter":  {
+                                "Parse_JSON":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "Foreach",
+                            "runtimeConfiguration":  {
+                                "concurrency":  {
+                                    "repetitions":  1
+                                }
+                            }
+                        },
+                        "Increment_variable_2":  {
+                            "runAfter":  {
+                                "For_each":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "IncrementVariable",
+                            "inputs":  {
+                                "name":  "LastDate",
+                                "value":  1
+                            }
+                        },
+                        "Initialize_EndDate_variable":  {
+                            "runAfter":  {
+                                "Compose_-_for_End_date":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "EndDate",
+                                        "type":  "string",
+                                        "value":  "@{formatDateTime(addDays(utcNow(),outputs('Compose_-_for_End_date')),'yyyy-MM-dd')}"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_ExludedDataTypes_variable":  {
+                            "runAfter":  {
+                                "Initialize_EndDate_variable":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "ExcludedDataTypes",
+                                        "type":  "string",
+                                        "value":  "\"Heartbeat\", \"ConfigurationChange\", \"ConfigurationData\", \"ThreatIntelligenceIndicator\", \"IntuneDeviceComplianceOrg\", \"Perf\", \"Update\", \"UpdateSummary\", \"SecurityBaseline\", \"SecurityBaselineSummary\""
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_StartDate_variable":  {
+                            "runAfter":  {
+                                "Scope_-_Check_file_in_storage_account":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "StartDate",
+                                        "type":  "string",
+                                        "value":  "@{formatDateTime(addDays(utcNow(), variables('LastDate')),'yyyy-MM-dd')}"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_LastDate":  {
+                            "runAfter":  {
+                                "Initialize_variable_2":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "LastDate",
+                                        "type":  "integer",
+                                        "value":  -179
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_2":  {
+                            "runAfter":  {
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "HoursCount",
+                                        "type":  "integer",
+                                        "value":  0
+                                    }
+                                ]
+                            }
+                        },
+                        "Parse_JSON":  {
+                            "runAfter":  {
+                                "Compose_Table_Names":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "ParseJson",
+                            "inputs":  {
+                                "content":  "@outputs('Compose_Table_Names')",
+                                "schema":  {
+                                    "properties":  {
+                                        "value":  {
+                                            "items":  {
+                                                "properties":  {
+                                                    "DataType":  {
+                                                        "type":  "string"
+                                                    }
+                                                },
+                                                "required":  [
+                                                    "DataType"
+                                                ],
+                                                "type":  "object"
+                                            },
+                                            "type":  "array"
+                                        }
+                                    },
+                                    "type":  "object"
+                                }
+                            }
+                        },
+                        "Run_query_and_list_results":  {
+                            "runAfter":  {
+                                "Initialize_ExludedDataTypes_variable":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "ApiConnection",
+                            "inputs":  {
+                                "body":  "let excludedDataTypes = dynamic([@{variables('ExcludedDataTypes')}]);\nUsage \n| distinct DataType\n| where DataType !in (excludedDataTypes)",
+                                "host":  {
+                                    "connection":  {
+                                        "name":  "@parameters('$connections')['azuremonitorlogs_1']['connectionId']"
+                                    }
+                                },
+                                "method":  "post",
+                                "path":  "/queryData",
+                                "queries":  {
+                                    "resourcegroups": "[parameters('WorkspaceResourceGroup')]",
+                                    "resourcename": "[parameters('WorkspaceName')]",
+                                    "resourcetype": "Log Analytics Workspace",
+                                    "subscriptions": "[parameters('WorkspaceSubscription')]",
+                                    "timerange": "between(datetime(@{variables('StartDate')})..datetime(@{variables('EndDate')}))"
+                                }
+                            },
+                            "description":  "Retrieves the distinct data table names from the Usage tables that are *not* in the ExcludedDataTypes list"
+                        },
+                        "Scope_-_Check_file_in_storage_account":  {
+                            "actions":  {
+                                "Condition":  {
+                                    "actions":  {
+                                        "Compose_-_Get_Value":  {
+                                            "runAfter":  {
+                                            },
+                                            "type":  "Compose",
+                                            "inputs":  "@body('Get_blob_content_(V2)')"
+                                        },
+                                        "Set_variable_-_StartDate":  {
+                                            "runAfter":  {
+                                                "Compose_-_Get_Value":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "SetVariable",
+                                            "inputs":  {
+                                                "name":  "LastDate",
+                                                "value":  "@int(outputs('Compose_-_Get_Value'))"
+                                            }
+                                        }
+                                    },
+                                    "runAfter":  {
+                                        "Get_blob_content_(V2)":  [
+                                            "Succeeded",
+                                            "Skipped",
+                                            "Failed"
+                                        ]
+                                    },
+                                    "expression":  {
+                                        "and":  [
+                                            {
+                                                "not":  {
+                                                    "equals":  [
+                                                        "@outputs('Get_blob_content_(V2)')['statusCode']",
+                                                        404
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    "type":  "If"
+                                },
+                                "Get_blob_content_(V2)":  {
+                                    "runAfter":  {
+                                    },
+                                    "metadata":  {
+                                        "JTJmbGFzdGxvZyUyZmxhc3Rsb2cuanNvbg==":  "/lastlog/lastlog.json"
+                                    },
+                                    "type":  "ApiConnection",
+                                    "inputs":  {
+                                        "host":  {
+                                            "connection":  {
+                                                "name":  "@parameters('$connections')['azureblob']['connectionId']"
+                                            }
+                                        },
+                                        "method":  "get",
+                                        "path":  "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files/@{encodeURIComponent(encodeURIComponent('/logicappruntimes/lastlog.txt'))}/content",
+                                        "queries":  {
+                                            "inferContentType":  true
+                                        }
+                                    }
+                                }
+                            },
+                            "runAfter":  {
+                                "Initialize_variable_-_LastDate":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "Scope"
+                        }
+                    },
+                    "outputs":  {
+                    }
+                },
+                "parameters":  {
+                    "$connections":  {
+                        "value":  {
+                            "azureblob":  {
+                                "connectionId":  "[resourceId('Microsoft.Web/connections', variables('AzureblobConnectionName'))]",
+                                "connectionName":  "[variables('AzureblobConnectionName')]",
+                                "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Azureblob')]"
+                            },
+                            "azuremonitorlogs_1":  {
+                                "connectionId":  "[resourceId('Microsoft.Web/connections', variables('AzuremonitorlogsConnectionName'))]",
+                                "connectionName":  "[variables('AzuremonitorlogsConnectionName')]",
+                                "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Azuremonitorlogs')]"
+                            }
+                        }
+                    }
+                }
+            },
+            "name":  "[parameters('PlaybookName')]",
+            "type":  "Microsoft.Logic/workflows",
+            "location":  "[resourceGroup().location]",
+            "tags":  {
+                "LogicAppsCategory":  "security"
+            },
+            "apiVersion":  "2017-07-01",
+            "dependsOn":  [
+                "[resourceId('Microsoft.Web/connections', variables('AzureblobConnectionName'))]",
+                "[resourceId('Microsoft.Web/connections', variables('AzuremonitorlogsConnectionName'))]"
+            ]
+        },
+        {
+            "type":  "Microsoft.Web/connections",
+            "apiVersion":  "2016-06-01",
+            "name":  "[variables('AzureblobConnectionName')]",
+            "location":  "[resourceGroup().location]",
+            "kind":  "V1",
+            "properties":  {
+                "displayName":  "[variables('AzureblobConnectionName')]",
+                "customParameterValues":  {
+                },
+                "api":  {
+                    "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Azureblob')]"
+                }
+            }
+        },
+        {
+            "type":  "Microsoft.Web/connections",
+            "apiVersion":  "2016-06-01",
+            "name":  "[variables('AzuremonitorlogsConnectionName')]",
+            "location":  "[resourceGroup().location]",
+            "kind":  "V1",
+            "properties":  {
+                "displayName":  "[variables('AzuremonitorlogsConnectionName')]",
+                "customParameterValues":  {
+                },
+                "api":  {
+                    "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Azuremonitorlogs')]"
+                }
+            }
+        }
+    ]
+}
