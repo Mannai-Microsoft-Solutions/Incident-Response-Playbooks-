@@ -34,6 +34,8 @@ This playbook will send you an alert should you exceed a budget that you define 
 
 ### Send-ConnectorHealthStatus
 
+The Logic App leverages underlying queries to provide you with an option to configure “Push notifications” to e-mail or a Microsoft Teams channel based on user defined anomaly scores as well as time since the last “Heartbeat” from Virtual Machines connected to the workspace. Below is a detailed description of how the rule and the logic app are put together
+
 <em>The KQL query below will be added to this step in the Logic App and will execute against your workspace. You can modify the threshold values to suit your needs.</em>
 ```
 let UpperThreshold = 3.0; // Upper Anomaly threshold score
