@@ -6,7 +6,7 @@ Description: This Playbook runs on a daily schedule and moves 89 day old logs pe
 
 ### Mannai-Move-LogAnalytics-to-Storage
 
-## Prerequisites
+## Permission Required
 
 You will need to authenticate a connection for Azure Monitor within the Playbook:
 
