@@ -23,9 +23,9 @@ After deployment, you can run this playbook manually on an alert or attach it to
 
 ### Revoke-AADSignInSessions
 
-| Trigger    | Rest API | Permission |
+| Http Trigger    | Rest API | Permission |
 | -------- | ------- | -------- |
-| HTTP  | https://graph.microsoft.com/v1.0/{UPN}/revokeSignInSessions | User.ReadWrite.All|
+| Post  | https://graph.microsoft.com/v1.0/{UPN}/revokeSignInSessions | User.ReadWrite.All|
 
 
 
