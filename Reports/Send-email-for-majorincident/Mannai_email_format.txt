@@ -1,0 +1,30 @@
+<!DOCTYPE html> <html> <table style="width: 100%; border-collapse: collapse;" border="0" width="100%"> <tbody> <tr> <td style="width: 19%;" align="center" width="19%"> <strong><img src="https://raw.githubusercontent.com/RakeshPrasad21/SOC/main/mannai/images/Mannai-Logo1.png" alt="" height="80px" /></strong> </td> <td style="width: 61.1434%;" width="68%"> <p style="text-align: center;"><span style="font-size: 16pt;"><strong>Sentinel Incident Report</strong></span></p> <p style="text-align: center;"><strong></strong></p> </td> <td style="width: 13%;" align="center" width="13%"> <strong><img src="https://azure.microsoft.com/svghandler/azure-sentinel?width=150&amp;height=79" alt="" height="80px" /></strong> </td> </tr> <tr> <td style="width: 93.1434%;" colspan="4" width="100%">Hi Team, <p>I hope this message finds you well. We want to inform you that we are currently addressing a high-security incident that has come to our attention.</p> <p>We will keep you informed about the progress and any relevant updates as we work towards a resolution. If you have any immediate concerns or questions, please don't hesitate to reach out to our support team at MMS.Soc@mannai.com.qa</p> <p>&nbsp;</p> </td> </tr> <tr> <td style="width: 93.1434%;" colspan="4" width="100%"> <p>Incident title:</p> <p><span style="font-size: 16pt;"><strong></strong>RA Multiple failed user logon attempts to a service involving multiple users</span></p> <p>&nbsp;</p> </td> </tr> </tbody> </table> 
+<table style="width: 50%; border-collapse: collapse;" border="1" width="100%"> <tbody> 
+<tr> 
+<td colspan="2" style="text-align:center"> <strong style="font-size: 13pt;">Incident Detail</strong> 
+</td> 
+</tr> 
+<tr> 
+<td> Creation time </td> 
+<td> <span style="font-size: 12.0pt;">2024-01-31T05:32:17.5333333Z</span></p> </td> 
+</tr> 
+<tr> 
+<td > Incident ID </td> 
+<td> <span style="font-size: 12.0pt; padding-right:2px">104887</span> &nbsp; <span style="font-size: 13pt;"><strong><a href="https://portal.azure.com/#asset/Microsoft_Azure_Security_Insights/Incident/subscriptions/9f31fa0f-1001-48c8-bfc4-c794caaad334/resourceGroups/racshubrgalogs/providers/Microsoft.OperationalInsights/workspaces/ralahubprod001/providers/Microsoft.SecurityInsights/Incidents/20eaafc2-58c2-4e9e-a3bd-6146bd40f360">View incident</a></strong></span> </td> </tr> </tr> <tr> 
+<td > Severity </td> 
+<td> <span style="font-size: 12.0pt;">High</span></p> 
+</td> 
+</tr> 
+<tr> 
+<td > Type of Incident </td> 
+<td> <span style="font-size: 12.0pt;">[]</span></p> 
+</td> 
+</tr> 
+<tr> 
+<td > Provider </td> 
+<td> <span style="font-size: 12.0pt;">Microsoft 365 Defender</span></p> 
+</td> 
+</tr> 
+</tbody> 
+</table> 
+</html>
