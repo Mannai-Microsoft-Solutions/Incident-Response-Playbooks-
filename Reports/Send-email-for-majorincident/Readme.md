@@ -15,6 +15,11 @@ An O365 account to be used to send email notification
 ### Default Email screenshot
 ![Email](./LightEmail_Send-email-with-formatted-incident-report.png)
 
-### Mannai Email Formate screenshot
+
+### Mannai Email Formate screenshot-1
+![image](https://github.com/user-attachments/assets/dcef275d-72b7-49fd-9faf-d99920f429e8)
+
+
+### Mannai Email Formate screenshot-2
 ![image](https://github.com/user-attachments/assets/a11aac41-1fc9-4752-9a96-d60dc2329c7b)
 
