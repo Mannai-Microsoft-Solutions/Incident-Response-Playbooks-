@@ -12,5 +12,9 @@ An O365 account to be used to send email notification
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FMannai-Microsoft-Solutions%2FIncident-Response-Playbooks%2Fmain%2FReports%2FSend-email-for-majorincident%2Fazuredeploy.json)
 
 
-### Email screenshot
+### Default Email screenshot
 ![Email](./LightEmail_Send-email-with-formatted-incident-report.png)
+
+### Mannai Email Formate screenshot
+![image](https://github.com/user-attachments/assets/a11aac41-1fc9-4752-9a96-d60dc2329c7b)
+
