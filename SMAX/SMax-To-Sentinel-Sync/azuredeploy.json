@@ -1,0 +1,986 @@
+{
+    "$schema":  "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion":  "1.0.0.0",
+    "metadata":  {
+        "title":  "",
+        "description":  "",
+        "prerequisites":  "",
+        "postDeployment":  [
+        ],
+        "prerequisitesDeployTemplateFile":  "",
+        "lastUpdateTime":  "",
+        "entities":  [
+        ],
+        "tags":  [
+        ],
+        "support":  {
+            "tier":  "community",
+            "armtemplate":  "Generated from https://github.com/Azure/Azure-Sentinel/tree/master/Tools/Playbook-ARM-Template-Generator"
+        },
+        "author":  {
+            "name":  ""
+        }
+    },
+    "parameters":  {
+        "PlaybookName":  {
+            "defaultValue":  "SMax-To-Sentinel-Sync",
+            "type":  "string"
+        },
+        "SMaxBaseUrl":  {
+            "type":  "string",
+            "metadata":  {
+                "description":  "Enter value for SMaxBaseUrl"
+            }
+        },
+        "SMaxPassword":  {
+            "type":  "string",
+            "metadata":  {
+                "description":  "Enter value for SMaxPassword"
+            }
+        },
+        "SMaxTenantId":  {
+            "type":  "string",
+            "metadata":  {
+                "description":  "Enter value for SMaxTenantId"
+            }
+        },
+        "SMaxUserId":  {
+            "type":  "string",
+            "metadata":  {
+                "description":  "Enter value for SMaxUserId"
+            }
+        },
+        "WorkspaceName":  {
+            "type":  "string",
+            "metadata":  {
+                "description":  "Enter value for WorkspaceName"
+            }
+        }
+    },
+    "variables":  {
+        "AzureblobConnectionName":  "[concat('Azureblob-', parameters('PlaybookName'))]",
+        "MicrosoftSentinelConnectionName":  "[concat('MicrosoftSentinel-', parameters('PlaybookName'))]"
+    },
+    "resources":  [
+        {
+            "properties":  {
+                "provisioningState":  "Succeeded",
+                "state":  "Disabled",
+                "definition":  {
+                    "$schema":  "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion":  "1.0.0.0",
+                    "parameters":  {
+                        "$connections":  {
+                            "defaultValue":  {
+                            },
+                            "type":  "Object"
+                        },
+                        "SMaxBaseUrl":  {
+                            "defaultValue":  "[parameters('SMaxBaseUrl')]",
+                            "type":  "string"
+                        },
+                        "SMaxPassword":  {
+                            "defaultValue":  "[parameters('SMaxPassword')]",
+                            "type":  "string"
+                        },
+                        "SMaxTenantId":  {
+                            "defaultValue":  "[parameters('SMaxTenantId')]",
+                            "type":  "string"
+                        },
+                        "SMaxUserId":  {
+                            "defaultValue":  "[parameters('SMaxUserId')]",
+                            "type":  "string"
+                        },
+                        "WorkspaceName":  {
+                            "defaultValue":  "[parameters('WorkspaceName')]",
+                            "type":  "string"
+                        }
+                    },
+                    "triggers":  {
+                        "Recurrence":  {
+                            "recurrence":  {
+                                "frequency":  "Minute",
+                                "interval":  5
+                            },
+                            "evaluatedRecurrence":  {
+                                "frequency":  "Minute",
+                                "interval":  5
+                            },
+                            "type":  "Recurrence"
+                        }
+                    },
+                    "actions":  {
+                        "Condition_to_check_incident":  {
+                            "actions":  {
+                                "For_each_incident":  {
+                                    "foreach":  "@body('Parse_JSON_-_Get_incident')?['entities']",
+                                    "actions":  {
+                                        "Check_if_SMAX_status_equal_to_Sentinel_status":  {
+                                            "actions":  {
+                                                "Scope_-_Update_incident":  {
+                                                    "actions":  {
+                                                        "Add_comment_to_incident_(V3)":  {
+                                                            "runAfter":  {
+                                                                "Update_incident":  [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type":  "ApiConnection",
+                                                            "inputs":  {
+                                                                "body":  {
+                                                                    "incidentArmId":  "@{items('For_each_incident')?['properties']?['ArmId_c']}",
+                                                                    "message":  "\u003cp\u003e@{items('For_each_incident')?['properties']?['Solution']}\u003c/p\u003e"
+                                                                },
+                                                                "host":  {
+                                                                    "connection":  {
+                                                                        "name":  "@parameters('$connections')['azuresentinel_1']['connectionId']"
+                                                                    }
+                                                                },
+                                                                "method":  "post",
+                                                                "path":  "/Incidents/Comment"
+                                                            }
+                                                        },
+                                                        "Check_active_or_closed":  {
+                                                            "actions":  {
+                                                                "Set_Active_Incident_Update_body":  {
+                                                                    "runAfter":  {
+                                                                    },
+                                                                    "type":  "SetVariable",
+                                                                    "inputs":  {
+                                                                        "name":  "IncidentUpdateBody",
+                                                                        "value":  "{\n  \"etag\": @{body('Parse-_Get_Sentinel_incident')?['etag']},\n  \"properties\": {   \n    \"Title\":\"@{items('For_each_incident')?['properties']?['DisplayLabel']}\",\n    \"severity\": \"@{body('Parse-_Get_Sentinel_incident')?['properties']?['severity']}\",\n    \"status\": \"@{variables('Status')}\"\n  }\n}"
+                                                                    }
+                                                                }
+                                                            },
+                                                            "runAfter":  {
+                                                            },
+                                                            "else":  {
+                                                                "actions":  {
+                                                                    "Set_closed_Incident_Update_Body":  {
+                                                                        "runAfter":  {
+                                                                        },
+                                                                        "type":  "SetVariable",
+                                                                        "inputs":  {
+                                                                            "name":  "IncidentUpdateBody",
+                                                                            "value":  "{\n  \"etag\": @{body('Parse-_Get_Sentinel_incident')?['etag']},\n  \"properties\": {   \n    \"status\": \"@{variables('Status')}\",   \n    \"severity\": \"@{body('Parse-_Get_Sentinel_incident')?['properties']?['severity']}\",\n     \"Title\":\"@{items('For_each_incident')?['properties']?['DisplayLabel']}\",\n    \"classification\": \"@{variables('Classification')}\",\n    \"classificationReason\": \"@{variables('ClassificationReason')}\",\n    \"classificationComment\": \"Closed in SMAX\"\n  }\n}"
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            "expression":  {
+                                                                "and":  [
+                                                                    {
+                                                                        "equals":  [
+                                                                            "@items('For_each_incident')?['properties']?['status']",
+                                                                            "InProgress"
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "type":  "If"
+                                                        },
+                                                        "Compose-_Update_incident_body":  {
+                                                            "runAfter":  {
+                                                                "Check_active_or_closed":  [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type":  "Compose",
+                                                            "inputs":  "@json(variables('IncidentUpdateBody'))"
+                                                        },
+                                                        "Set_variable-_LastUpdatedTime":  {
+                                                            "runAfter":  {
+                                                                "Add_comment_to_incident_(V3)":  [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type":  "SetVariable",
+                                                            "inputs":  {
+                                                                "name":  "LastUpdatedTime",
+                                                                "value":  "@{items('For_each_incident')?['properties']?['LastUpdateTime']}"
+                                                            }
+                                                        },
+                                                        "Update_blob_(V2)":  {
+                                                            "runAfter":  {
+                                                                "Set_variable-_LastUpdatedTime":  [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type":  "ApiConnection",
+                                                            "inputs":  {
+                                                                "body":  "@variables('LastUpdatedTime')",
+                                                                "headers":  {
+                                                                    "ReadFileMetadataFromServer":  true
+                                                                },
+                                                                "host":  {
+                                                                    "connection":  {
+                                                                        "name":  "@parameters('$connections')['azureblob_1']['connectionId']"
+                                                                    }
+                                                                },
+                                                                "method":  "put",
+                                                                "path":  "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files/@{encodeURIComponent(encodeURIComponent('logicappruntimes/IncidentManager.txt'))}"
+                                                            }
+                                                        },
+                                                        "Update_incident":  {
+                                                            "runAfter":  {
+                                                                "Compose-_Update_incident_body":  [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type":  "Http",
+                                                            "inputs":  {
+                                                                "authentication":  {
+                                                                    "audience":  "https://management.azure.com",
+                                                                    "type":  "ManagedServiceIdentity"
+                                                                },
+                                                                "body":  "@outputs('Compose-_Update_incident_body')",
+                                                                "method":  "PUT",
+                                                                "uri":  "https://management.azure.com@{items('For_each_incident')?['properties']?['ArmId_c']}?api-version=2023-05-01-preview"
+                                                            }
+                                                        }
+                                                    },
+                                                    "runAfter":  {
+                                                    },
+                                                    "type":  "Scope"
+                                                }
+                                            },
+                                            "runAfter":  {
+                                                "Switch_-_Set_Status":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "expression":  {
+                                                "and":  [
+                                                    {
+                                                        "not":  {
+                                                            "equals":  [
+                                                                "@body('Parse-_Get_Sentinel_incident')?['properties']?['status']",
+                                                                "@variables('Status')"
+                                                            ]
+                                                        }
+                                                    },
+                                                    {
+                                                        "or":  [
+                                                            {
+                                                                "equals":  [
+                                                                    "@variables('Status')",
+                                                                    "Active"
+                                                                ]
+                                                            },
+                                                            {
+                                                                "equals":  [
+                                                                    "@variables('Status')",
+                                                                    "Closed"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "type":  "If"
+                                        },
+                                        "Get_Sentinel_incident":  {
+                                            "runAfter":  {
+                                            },
+                                            "type":  "Http",
+                                            "inputs":  {
+                                                "authentication":  {
+                                                    "audience":  "https://management.azure.com",
+                                                    "type":  "ManagedServiceIdentity"
+                                                },
+                                                "method":  "GET",
+                                                "uri":  "https://management.azure.com@{items('For_each_incident')?['properties']?['ArmId_c']}?api-version=2023-05-01-preview"
+                                            }
+                                        },
+                                        "Parse-_Get_Sentinel_incident":  {
+                                            "runAfter":  {
+                                                "Get_Sentinel_incident":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "ParseJson",
+                                            "inputs":  {
+                                                "content":  "@body('Get_Sentinel_incident')",
+                                                "schema":  {
+                                                    "properties":  {
+                                                        "etag":  {
+                                                            "type":  "string"
+                                                        },
+                                                        "id":  {
+                                                            "type":  "string"
+                                                        },
+                                                        "name":  {
+                                                            "type":  "string"
+                                                        },
+                                                        "properties":  {
+                                                            "properties":  {
+                                                                "additionalData":  {
+                                                                    "properties":  {
+                                                                        "alertProductNames":  {
+                                                                            "type":  "array"
+                                                                        },
+                                                                        "alertsCount":  {
+                                                                            "type":  "integer"
+                                                                        },
+                                                                        "bookmarksCount":  {
+                                                                            "type":  "integer"
+                                                                        },
+                                                                        "commentsCount":  {
+                                                                            "type":  "integer"
+                                                                        },
+                                                                        "tactics":  {
+                                                                            "type":  "array"
+                                                                        },
+                                                                        "techniques":  {
+                                                                            "type":  "array"
+                                                                        }
+                                                                    },
+                                                                    "type":  "object"
+                                                                },
+                                                                "createdTimeUtc":  {
+                                                                    "type":  "string"
+                                                                },
+                                                                "incidentNumber":  {
+                                                                    "type":  "integer"
+                                                                },
+                                                                "incidentUrl":  {
+                                                                    "type":  "string"
+                                                                },
+                                                                "labels":  {
+                                                                    "type":  "array"
+                                                                },
+                                                                "lastModifiedTimeUtc":  {
+                                                                    "type":  "string"
+                                                                },
+                                                                "owner":  {
+                                                                    "properties":  {
+                                                                        "assignedTo":  {
+                                                                        },
+                                                                        "email":  {
+                                                                        },
+                                                                        "objectId":  {
+                                                                        },
+                                                                        "ownerType":  {
+                                                                        },
+                                                                        "userPrincipalName":  {
+                                                                        }
+                                                                    },
+                                                                    "type":  "object"
+                                                                },
+                                                                "providerIncidentId":  {
+                                                                    "type":  "string"
+                                                                },
+                                                                "providerName":  {
+                                                                    "type":  "string"
+                                                                },
+                                                                "relatedAnalyticRuleIds":  {
+                                                                    "type":  "array"
+                                                                },
+                                                                "severity":  {
+                                                                    "type":  "string"
+                                                                },
+                                                                "status":  {
+                                                                    "type":  "string"
+                                                                },
+                                                                "title":  {
+                                                                    "type":  "string"
+                                                                }
+                                                            },
+                                                            "type":  "object"
+                                                        },
+                                                        "type":  {
+                                                            "type":  "string"
+                                                        }
+                                                    },
+                                                    "type":  "object"
+                                                }
+                                            }
+                                        },
+                                        "Switch_-_Set_Status":  {
+                                            "runAfter":  {
+                                                "Parse-_Get_Sentinel_incident":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "cases":  {
+                                                "Case-Complete":  {
+                                                    "case":  "Complete",
+                                                    "actions":  {
+                                                        "Set_variable_-_Classification":  {
+                                                            "runAfter":  {
+                                                                "Set_variable_-_Status_close":  [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type":  "SetVariable",
+                                                            "inputs":  {
+                                                                "name":  "Classification",
+                                                                "value":  "@{if(equals(items('For_each_incident')?['properties']?['CompletionCode'],'BenignPositiveSuspiciousButExpected_c'),'BenignPositive',if(equals(items('For_each_incident')?['properties']?['CompletionCode'],'FalsePositiveInaccurateData_c'),'FalsePositive',if(equals(items('For_each_incident')?['properties']?['CompletionCode'],'FalsePositiveIncorrectAlertLogic_c'),'FalsePositive',if(equals(items('For_each_incident')?['properties']?['CompletionCode'],'TruePositiveSuspiciousActivity_c'),'TruePositive','Undetermined'))))}"
+                                                            }
+                                                        },
+                                                        "Set_variable_-_Classification_Reason":  {
+                                                            "runAfter":  {
+                                                                "Set_variable_-_Classification":  [
+                                                                    "Succeeded"
+                                                                ]
+                                                            },
+                                                            "type":  "SetVariable",
+                                                            "inputs":  {
+                                                                "name":  "ClassificationReason",
+                                                                "value":  "@{if(equals(items('For_each_incident')?['properties']?['CompletionCode'],'BenignPositiveSuspiciousButExpected_c'),'SuspiciousButExpected',if(equals(items('For_each_incident')?['properties']?['CompletionCode'],'FalsePositiveInaccurateData_c'),'InaccurateData',if(equals(items('For_each_incident')?['properties']?['CompletionCode'],'FalsePositiveIncorrectAlertLogic_c'),'IncorrectAlertLogic',if(equals(items('For_each_incident')?['properties']?['CompletionCode'],'TruePositiveSuspiciousActivity_c'),'SuspiciousActivity',''))))}"
+                                                            }
+                                                        },
+                                                        "Set_variable_-_Status_close":  {
+                                                            "runAfter":  {
+                                                            },
+                                                            "type":  "SetVariable",
+                                                            "inputs":  {
+                                                                "name":  "Status",
+                                                                "value":  "Closed"
+                                                            }
+                                                        }
+                                                    }
+                                                },
+                                                "Case-_InProgress":  {
+                                                    "case":  "InProgress",
+                                                    "actions":  {
+                                                        "Set_variable_-_Status_active":  {
+                                                            "runAfter":  {
+                                                            },
+                                                            "type":  "SetVariable",
+                                                            "inputs":  {
+                                                                "name":  "Status",
+                                                                "value":  "Active"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "default":  {
+                                                "actions":  {
+                                                }
+                                            },
+                                            "expression":  "@{items('For_each_incident')?['properties']?['Status']}",
+                                            "type":  "Switch"
+                                        }
+                                    },
+                                    "runAfter":  {
+                                    },
+                                    "type":  "Foreach"
+                                }
+                            },
+                            "runAfter":  {
+                                "Parse_JSON_-_Get_incident":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "expression":  {
+                                "and":  [
+                                    {
+                                        "greater":  [
+                                            "@body('Parse_JSON_-_Get_incident')?['meta']?['total_count']",
+                                            0
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type":  "If"
+                        },
+                        "GetSMaxToken":  {
+                            "runAfter":  {
+                                "Scope_-_Check_file_in_storage_account":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "Http",
+                            "inputs":  {
+                                "body":  {
+                                    "Login":  "@{parameters('SMaxUserId')}",
+                                    "Password":  "@{parameters('SMaxPassword')}"
+                                },
+                                "headers":  {
+                                    "Content-Type":  "application/json"
+                                },
+                                "method":  "POST",
+                                "uri":  "@{parameters('SMaxBaseUrl')}@{parameters('SMaxTenantId')}"
+                            }
+                        },
+                        "Get_SMAX_Incident_by_status":  {
+                            "runAfter":  {
+                                "GetSMaxToken":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "Http",
+                            "inputs":  {
+                                "cookie":  "LWSSO_COOKIE_KEY=@{body('GetSMaxToken')}",
+                                "headers":  {
+                                    "Content-Type":  "application/json"
+                                },
+                                "method":  "GET",
+                                "uri":  "https://msitsm.mannai.com.qa:443/rest/@{parameters('SMaxTenantId')}/ems/Incident?filter=WorkspaceID_c+%3D+'@{parameters('WorkspaceName')}'+and+LastUpdateTime+%3E+@{variables('LastUpdatedTime')}+and+(Status+%3D+'InProgress'+or+Status+%3D+'Complete')\u0026layout=Id,Priority,DisplayLabel,PhaseId,Status,ServiceDeskGroup,RegisteredForActualService,SLT.TargetDate,ProcessId,SLT.SLATargetDate,SLT.OLATargetDate,ServiceDeskGroup.Name,ServiceDeskGroup.IsDeleted,RegisteredForActualService.DisplayLabel,RegisteredForActualService.SubType,RegisteredForActualService.IsDeleted,OwnedByPerson,OwnedByPerson.Name,OwnedByPerson.Email,Description,CompletionCode,Urgency,RequestedByPerson,ExternalProcessReference,EntityModel,IncidentUrl_c,ResourceGroup_c,SubscriptionID_c,WorkspaceID_c,ExternalProcessReference,Category,Etag_c,ArmId_c,Solution\u0026order=LastUpdateTime+asc"
+                            }
+                        },
+                        "Initialize_variable-_IncidentUpdateBody":  {
+                            "runAfter":  {
+                                "Initialize_variable_-_LastUpdatedTime":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "IncidentUpdateBody",
+                                        "type":  "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_Classification":  {
+                            "runAfter":  {
+                                "Initialize_variable_-_Status":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "Classification",
+                                        "type":  "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_ClassificationReason":  {
+                            "runAfter":  {
+                                "Initialize_variable_-_Classification":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "ClassificationReason",
+                                        "type":  "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_LastUpdatedTime":  {
+                            "runAfter":  {
+                                "Initialize_variable_-_ClassificationReason":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "LastUpdatedTime",
+                                        "type":  "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_Status":  {
+                            "runAfter":  {
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "Status",
+                                        "type":  "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "Parse_JSON_-_Get_incident":  {
+                            "runAfter":  {
+                                "Get_SMAX_Incident_by_status":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "ParseJson",
+                            "inputs":  {
+                                "content":  "@body('Get_SMAX_Incident_by_status')",
+                                "schema":  {
+                                    "properties":  {
+                                        "entities":  {
+                                            "items":  {
+                                                "properties":  {
+                                                    "entity_type":  {
+                                                        "type":  "string"
+                                                    },
+                                                    "properties":  {
+                                                        "properties":  {
+                                                            "ArmId_c":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "Description":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "DisplayLabel":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "EntityModel":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "Etag_c":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "ExternalProcessReference":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "Id":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "IncidentUrl_c":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "LastUpdateTime":  {
+                                                                "type":  "integer"
+                                                            },
+                                                            "PhaseId":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "Priority":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "ProcessId":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "RegisteredForActualService":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "RequestedByPerson":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "ResourceGroup_c":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "ServiceDeskGroup":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "Solution":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "Status":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "SubscriptionID_c":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "Urgency":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "WorkspaceID_c":  {
+                                                                "type":  [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            }
+                                                        },
+                                                        "type":  "object"
+                                                    },
+                                                    "related_properties":  {
+                                                        "properties":  {
+                                                            "RegisteredForActualService":  {
+                                                                "properties":  {
+                                                                    "DisplayLabel":  {
+                                                                        "type":  "string"
+                                                                    },
+                                                                    "IsDeleted":  {
+                                                                        "type":  "boolean"
+                                                                    },
+                                                                    "SubType":  {
+                                                                        "type":  "string"
+                                                                    }
+                                                                },
+                                                                "type":  "object"
+                                                            },
+                                                            "SLT":  {
+                                                                "properties":  {
+                                                                    "SLATargetDate":  {
+                                                                        "type":  "integer"
+                                                                    },
+                                                                    "TargetDate":  {
+                                                                        "type":  "integer"
+                                                                    }
+                                                                },
+                                                                "type":  "object"
+                                                            },
+                                                            "ServiceDeskGroup":  {
+                                                                "properties":  {
+                                                                    "IsDeleted":  {
+                                                                        "type":  "boolean"
+                                                                    },
+                                                                    "Name":  {
+                                                                        "type":  "string"
+                                                                    }
+                                                                },
+                                                                "type":  "object"
+                                                            }
+                                                        },
+                                                        "type":  "object"
+                                                    }
+                                                },
+                                                "required":  [
+                                                    "entity_type",
+                                                    "properties",
+                                                    "related_properties"
+                                                ],
+                                                "type":  "object"
+                                            },
+                                            "type":  "array"
+                                        },
+                                        "meta":  {
+                                            "properties":  {
+                                                "completion_status":  {
+                                                    "type":  "string"
+                                                },
+                                                "errorDetailsList":  {
+                                                    "type":  "array"
+                                                },
+                                                "errorDetailsMetaList":  {
+                                                    "type":  "array"
+                                                },
+                                                "query_time":  {
+                                                    "type":  "integer"
+                                                },
+                                                "total_count":  {
+                                                    "type":  "integer"
+                                                }
+                                            },
+                                            "type":  "object"
+                                        }
+                                    },
+                                    "type":  "object"
+                                }
+                            }
+                        },
+                        "Scope_-_Check_file_in_storage_account":  {
+                            "actions":  {
+                                "Condition":  {
+                                    "actions":  {
+                                        "Create_blob_(V2)":  {
+                                            "runAfter":  {
+                                            },
+                                            "type":  "ApiConnection",
+                                            "inputs":  {
+                                                "body":  "@div(sub(ticks(addMinutes(utcNow(),-10)), ticks('1970-01-01T00:00:00Z')), 10000)",
+                                                "headers":  {
+                                                    "ReadFileMetadataFromServer":  true
+                                                },
+                                                "host":  {
+                                                    "connection":  {
+                                                        "name":  "@parameters('$connections')['azureblob_1']['connectionId']"
+                                                    }
+                                                },
+                                                "method":  "post",
+                                                "path":  "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
+                                                "queries":  {
+                                                    "folderPath":  "logicappruntimes",
+                                                    "name":  "IncidentManager.txt",
+                                                    "queryParametersSingleEncoded":  true
+                                                }
+                                            },
+                                            "runtimeConfiguration":  {
+                                                "contentTransfer":  {
+                                                    "transferMode":  "Chunked"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "runAfter":  {
+                                        "Get_blob_content_(V2)":  [
+                                            "Succeeded",
+                                            "Failed",
+                                            "Skipped"
+                                        ]
+                                    },
+                                    "else":  {
+                                        "actions":  {
+                                            "Set_variable_-_Last_Update_Time":  {
+                                                "runAfter":  {
+                                                },
+                                                "type":  "SetVariable",
+                                                "inputs":  {
+                                                    "name":  "LastUpdatedTime",
+                                                    "value":  "@{body('Get_blob_content_(V2)')}"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "expression":  {
+                                        "and":  [
+                                            {
+                                                "equals":  [
+                                                    "@outputs('Get_blob_content_(V2)')['statusCode']",
+                                                    404
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type":  "If"
+                                },
+                                "Get_blob_content_(V2)":  {
+                                    "runAfter":  {
+                                    },
+                                    "type":  "ApiConnection",
+                                    "inputs":  {
+                                        "host":  {
+                                            "connection":  {
+                                                "name":  "@parameters('$connections')['azureblob_1']['connectionId']"
+                                            }
+                                        },
+                                        "method":  "get",
+                                        "path":  "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files/@{encodeURIComponent(encodeURIComponent('logicappruntimes/IncidentManager.txt'))}/content",
+                                        "queries":  {
+                                            "inferContentType":  true
+                                        }
+                                    }
+                                }
+                            },
+                            "runAfter":  {
+                                "Initialize_variable-_IncidentUpdateBody":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "Scope"
+                        }
+                    },
+                    "outputs":  {
+                    }
+                },
+                "parameters":  {
+                    "$connections":  {
+                        "value":  {
+                            "azureblob_1":  {
+                                "connectionId":  "[resourceId('Microsoft.Web/connections', variables('AzureblobConnectionName'))]",
+                                "connectionName":  "[variables('AzureblobConnectionName')]",
+                                "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Azureblob')]"
+                            },
+                            "azuresentinel_1":  {
+                                "connectionId":  "[resourceId('Microsoft.Web/connections', variables('MicrosoftSentinelConnectionName'))]",
+                                "connectionName":  "[variables('MicrosoftSentinelConnectionName')]",
+                                "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Azuresentinel')]",
+                                "connectionProperties":  {
+                                    "authentication":  {
+                                        "type":  "ManagedServiceIdentity"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "name":  "[parameters('PlaybookName')]",
+            "type":  "Microsoft.Logic/workflows",
+            "location":  "[resourceGroup().location]",
+            "identity":  {
+                "type":  "SystemAssigned"
+            },
+            "tags":  {
+                "hidden-SentinelTemplateName":  "SMax-To-Sentinel-Sync",
+                "hidden-SentinelTemplateVersion":  "1.0"
+            },
+            "apiVersion":  "2017-07-01",
+            "dependsOn":  [
+                "[resourceId('Microsoft.Web/connections', variables('AzureblobConnectionName'))]",
+                "[resourceId('Microsoft.Web/connections', variables('MicrosoftSentinelConnectionName'))]"
+            ]
+        },
+        {
+            "type":  "Microsoft.Web/connections",
+            "apiVersion":  "2016-06-01",
+            "name":  "[variables('AzureblobConnectionName')]",
+            "location":  "[resourceGroup().location]",
+            "kind":  "V1",
+            "properties":  {
+                "displayName":  "[variables('AzureblobConnectionName')]",
+                "customParameterValues":  {
+                },
+                "api":  {
+                    "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Azureblob')]"
+                }
+            }
+        },
+        {
+            "type":  "Microsoft.Web/connections",
+            "apiVersion":  "2016-06-01",
+            "name":  "[variables('MicrosoftSentinelConnectionName')]",
+            "location":  "[resourceGroup().location]",
+            "kind":  "V1",
+            "properties":  {
+                "displayName":  "[variables('MicrosoftSentinelConnectionName')]",
+                "customParameterValues":  {
+                },
+                "parameterValueType":  "Alternative",
+                "api":  {
+                    "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Azuresentinel')]"
+                }
+            }
+        }
+    ]
+}
