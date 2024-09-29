@@ -8,6 +8,23 @@ Mannai has designed an architecture following Microsoft's best practices for dep
 
 ![image](https://github.com/user-attachments/assets/ed6018fd-cfd1-4e86-a26f-e0efd5affbf5)
 
+## Permission/Role Required
+1.	Microsoft Sentinel Playbook Operator/ Microsoft Sentinel Operator role (if you want to update an incident) - Role require to both playbook for connection with azure sentinel.
+2.	API required roles SecurityIncident.Read.All, SecurityIncident.ReadWrite.All, Incident.Read.All, Incident.ReadWrite.All
+
+## Powershell Script
+
+```
+SecurityIncident.Read.All, SecurityIncident.ReadWrite.All
+$MIGuid=""
+$MI = Get-AzureADServicePrincipal -ObjectId $MIGuid
+$GraphAppId = "00000003-0000-0000-c000-000000000000"
+$PermissionName = "SecurityIncident.Read.All" 
+$GraphServicePrincipal = Get-AzureADServicePrincipal -Filter "appId eq '$GraphAppId'"
+$AppRole = $GraphServicePrincipal.AppRoles | Where-Object { $_.Value -eq $PermissionName -and $_.AllowedMemberTypes -contains "Application" }
+New-AzureAdServiceAppRoleAssignment -ObjectId $MI.ObjectId -PrincipalId $MI.ObjectId -ResourceId $GraphServicePrincipal.ObjectId -Id $AppRole.Id
+
+```
 
 
 ### Sentinel-To-SMax-Sync
