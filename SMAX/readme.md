@@ -27,8 +27,9 @@ New-AzureAdServiceAppRoleAssignment -ObjectId $MI.ObjectId -PrincipalId $MI.Obje
 ```
 ## SMAX
 https://msitsm.mannai.com.qa:443/auth/authentication-endpoint/authenticate/token?TENANTID=
+
 TENANTID=815658219
-Username - sentinelintuserprod
+
 
 ### Sentinel-To-SMax-Sync
 
