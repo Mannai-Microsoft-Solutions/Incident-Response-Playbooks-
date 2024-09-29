@@ -25,7 +25,10 @@ $AppRole = $GraphServicePrincipal.AppRoles | Where-Object { $_.Value -eq $Permis
 New-AzureAdServiceAppRoleAssignment -ObjectId $MI.ObjectId -PrincipalId $MI.ObjectId -ResourceId $GraphServicePrincipal.ObjectId -Id $AppRole.Id
 
 ```
-
+## SMAX
+https://msitsm.mannai.com.qa:443/auth/authentication-endpoint/authenticate/token?TENANTID=
+TENANTID=815658219
+Username - sentinelintuserprod
 
 ### Sentinel-To-SMax-Sync
 
