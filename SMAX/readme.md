@@ -15,7 +15,9 @@ Mannai has designed an architecture following Microsoft's best practices for dep
 ## Powershell Script
 
 ```
-SecurityIncident.Read.All, SecurityIncident.ReadWrite.All
+#SecurityIncident.Read.All, SecurityIncident.ReadWrite.All
+#$PermissionName = "SecurityIncident.ReadWrite.All" 
+
 $MIGuid=""
 $MI = Get-AzureADServicePrincipal -ObjectId $MIGuid
 $GraphAppId = "00000003-0000-0000-c000-000000000000"
