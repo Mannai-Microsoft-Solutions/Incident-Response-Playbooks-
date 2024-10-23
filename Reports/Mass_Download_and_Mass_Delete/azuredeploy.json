@@ -1,0 +1,660 @@
+{
+    "$schema":  "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion":  "1.0.0.0",
+    "metadata":  {
+        "title":  "",
+        "description":  "",
+        "prerequisites":  "",
+        "postDeployment":  [
+        ],
+        "prerequisitesDeployTemplateFile":  "",
+        "lastUpdateTime":  "",
+        "entities":  [
+        ],
+        "tags":  [
+        ],
+        "support":  {
+            "tier":  "community",
+            "armtemplate":  "Generated from https://github.com/Azure/Azure-Sentinel/tree/master/Tools/Playbook-ARM-Template-Generator"
+        },
+        "author":  {
+            "name":  ""
+        }
+    },
+    "parameters":  {
+        "PlaybookName":  {
+            "defaultValue":  "Notification-Mass-Download-Deleted",
+            "type":  "string"
+        },
+        "LogAnalyticName":  {
+            "type":  "String",
+            "metadata":  {
+                "description":  "Enter value for LogAnalyticName"
+            }
+        },
+        "RGName":  {
+            "type":  "String",
+            "metadata":  {
+                "description":  "Enter value for RGName"
+            }
+        },
+        "SubscriptionID":  {
+            "type":  "String",
+            "metadata":  {
+                "description":  "Enter value for SubscriptionID"
+            }
+        }
+    },
+    "variables":  {
+        "AzuremonitorlogsConnectionName":  "[concat('Azuremonitorlogs-', parameters('PlaybookName'))]",
+        "Office365ConnectionName":  "[concat('Office365-', parameters('PlaybookName'))]",
+        "Office365usersConnectionName":  "[concat('Office365users-', parameters('PlaybookName'))]"
+    },
+    "resources":  [
+        {
+            "properties":  {
+                "provisioningState":  "Succeeded",
+                "state":  "Enabled",
+                "definition":  {
+                    "$schema":  "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion":  "1.0.0.0",
+                    "parameters":  {
+                        "$connections":  {
+                            "defaultValue":  {
+                            },
+                            "type":  "Object"
+                        },
+                        "LogAnalyticName":  {
+                            "defaultValue":  "[parameters('LogAnalyticName')]",
+                            "type":  "String"
+                        },
+                        "RGName":  {
+                            "defaultValue":  "[parameters('RGName')]",
+                            "type":  "String"
+                        },
+                        "SubscriptionID":  {
+                            "defaultValue":  "[parameters('SubscriptionID')]",
+                            "type":  "String"
+                        }
+                    },
+                    "triggers":  {
+                        "Recurrence":  {
+                            "recurrence":  {
+                                "frequency":  "Hour",
+                                "interval":  1
+                            },
+                            "evaluatedRecurrence":  {
+                                "frequency":  "Hour",
+                                "interval":  1
+                            },
+                            "type":  "Recurrence"
+                        }
+                    },
+                    "actions":  {
+                        "Condition":  {
+                            "actions":  {
+                                "For_each":  {
+                                    "foreach":  "@body('Parse_JSON_-_First_KQL')?['value']",
+                                    "actions":  {
+                                        "Compose_-_Email_format":  {
+                                            "runAfter":  {
+                                                "Compose_-_Manager_UPN":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "Compose",
+                                            "inputs":  "\u003c!DOCTYPE html\u003e\n\u003chtml lang=\"en\"\u003e\n\u003chead\u003e\n    \u003cmeta charset=\"UTF-8\"\u003e\n    \u003cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"\u003e\n    \u003ctitle\u003eSecurity Incident Notification\u003c/title\u003e\n    \u003cstyle\u003e\n        body {\n            font-family: Arial, sans-serif;\n            background-color: #f0f4f7;\n            margin: 0;\n            padding: 20px;\n            color: #333;\n        }\n        .container {\n            background-color: #fff;\n            border-radius: 10px;\n            padding: 20px;\n            max-width: 700px;\n            margin: 0 auto;\n            box-shadow: 0 4px 15px rgba(0,0,0,0.1);\n            border: 1px solid #e0e4e8;\n        }\n        .header {\n            text-align: center;\n            background-color: #A1263E;\n            color: white;\n            padding: 30px;\n            border-radius: 10px 10px 0 0;\n        }\n        .header strong {\n            font-size: 18pt;\n        }\n        .content {\n            padding: 30px 20px;\n            font-size: 14pt;\n            line-height: 1.8;\n        }\n        .content p {\n            margin-bottom: 20px;\n        }\n        .content strong {\n            font-size: 16pt;\n            color: #4c81d1;\n        }\n        .incident-details {\n            width: 100%;\n            border-collapse: collapse;\n            margin: 20px 0;\n        }\n        .incident-details th, .incident-details td {\n            border: 1px solid #ddd;\n            padding: 10px;\n            text-align: left;\n        }\n        .incident-details th {\n            background-color: #f7f9fb;\n            font-size: 13pt;\n            text-align: center;\n        }\n        .incident-details td {\n            font-size: 12pt;\n        }\n        .footer {\n            text-align: left;\n            padding: 20px;\n            font-size: 12pt;\n            color: #555;\n            border-top: 1px solid #ddd;\n        }\n        .footer a {\n            color: #4c81d1;\n            text-decoration: none;\n        }\n        .footer img {\n            margin-top: 20px;\n        }\n        .footer p {\n            margin: 5px 0;\n        }\n        .btn {\n            display: inline-block;\n            padding: 10px 20px;\n            font-size: 14pt;\n            color: #fff;\n            background-color: #4c81d1;\n            text-align: center;\n            border-radius: 5px;\n            text-decoration: none;\n            margin-top: 10px;\n        }\n        .btn:hover {\n            background-color: #3a6ba0;\n        }\n        .note {\n            font-size: 11pt;\n            color: #888;\n            margin-top: 20px;\n            border-left: 4px solid #f39c12;\n            padding-left: 10px;\n        }\n    \u003c/style\u003e\n\u003c/head\u003e\n\u003cbody\u003e\n    \u003cdiv class=\"container\"\u003e\n        \u003cdiv class=\"header\"\u003e\n            \u003cstrong\u003eIMPORTANT: Security Incident Notification\u003c/strong\u003e\n        \u003c/div\u003e\n        \n        \u003cdiv class=\"content\"\u003e\n            \u003cp\u003eDear User,\u003c/p\u003e\n            \u003cp\u003eOur security monitoring systems have detected the following anomaly relating to the services we provide to you.\u003c/p\u003e\n            \u003cp\u003e\u003cstrong\u003eAnomaly type:\u003c/strong\u003eMass Deletion of Files \u003c/p\u003e\n        \u003c/div\u003e\n\n        \u003ctable class=\"incident-details\"\u003e\n            \u003cthead\u003e\n                \u003ctr\u003e\n                    \u003cth colspan=\"2\"\u003eIncident Details\u003c/th\u003e\n                \u003c/tr\u003e\n            \u003c/thead\u003e\n            \u003ctbody\u003e\n                \u003ctr\u003e\n                    \u003ctd\u003e\u003cstrong\u003eAnomaly type:\u003c/strong\u003e\u003c/td\u003e\n                    \u003ctd\u003eMass Deletion of Files\u003c/td\u003e\n                \u003c/tr\u003e                       \n                \u003ctr\u003e\n                    \u003ctd\u003e\u003cstrong\u003eSummary\u003c/strong\u003e\u003c/td\u003e\n                    \u003ctd\u003eUser deleted a large volume of files on SharePoint\u003c/td\u003e\n                \u003c/tr\u003e\n                \u003ctr\u003e\n                    \u003ctd\u003e\u003cstrong\u003eAction Taken\u003c/strong\u003e\u003c/td\u003e\n                    \u003ctd\u003eSend an email to support@qfcra.com to justify the deletion of files.\u003c/td\u003e\n                \u003c/tr\u003e\n               \u003ctr\u003e\n                    \u003ctd\u003e\u003cstrong\u003eFiles Deleted\u003c/strong\u003e\u003c/td\u003e\n                    \u003ctd\u003eReview File Attached.\u003c/td\u003e\n                \u003c/tr\u003e\n            \u003c/tbody\u003e\n        \u003c/table\u003e\n\n        \u003cdiv class=\"footer\"\u003e\n            \u003cp\u003e\u003cstrong\u003eCybersecurity Alerts\u003c/strong\u003e\u003c/p\u003e\n            \u003cp\u003eCyber Security Alerts and Notifications, IT Department\u003c/p\u003e\n            \n            \u003cimg src=\"https://raw.githubusercontent.com/RakeshPrasad21/SOC/main/mannai/images/QFCRA.png\" alt=\"QFCRA Logo\" height=\"60px\"\u003e\n            \u003cp\u003ePO Box 22989\u003c/br\u003eM +974 55409246\u003c/br\u003e\u003ca href=\"mailto:securityalerts@qfcra.com\"\u003esecurityalerts@QFCRA.COM\u003c/a\u003e | \u003ca href=\"https://www.qfcra.com\"\u003ewww.qfcra.com\u003c/a\u003e\u003c/p\u003e\n        \u003c/div\u003e\n\n        \u003cdiv class=\"note\"\u003e\n            \u003cp\u003e\u003cstrong\u003eReminder:\u003c/strong\u003e For your security, please ensure your devices are compliant with the latest security policies to prevent future incidents.\u003c/p\u003e\n        \u003c/div\u003e\n    \u003c/div\u003e\n\u003c/body\u003e\n\u003c/html\u003e"
+                                        },
+                                        "Compose_-_Manager_UPN":  {
+                                            "runAfter":  {
+                                                "Get_manager_(V2)":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "Compose",
+                                            "inputs":  "@body('Get_manager_(V2)')?['userPrincipalName']"
+                                        },
+                                        "Create_CSV_table":  {
+                                            "runAfter":  {
+                                                "Compose_-_Email_format":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "Table",
+                                            "inputs":  {
+                                                "format":  "CSV",
+                                                "from":  "@body('Run_query_and_list_results')?['value']"
+                                            }
+                                        },
+                                        "Get_manager_(V2)":  {
+                                            "runAfter":  {
+                                                "Run_query_and_list_results":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "ApiConnection",
+                                            "inputs":  {
+                                                "host":  {
+                                                    "connection":  {
+                                                        "name":  "@parameters('$connections')['office365users']['connectionId']"
+                                                    }
+                                                },
+                                                "method":  "get",
+                                                "path":  "/codeless/v1.0/users/@{encodeURIComponent(items('For_each')?['UserId'])}/manager",
+                                                "queries":  {
+                                                    "$select":  "mail,userPrincipalName"
+                                                }
+                                            }
+                                        },
+                                        "Run_query_and_list_results":  {
+                                            "runAfter":  {
+                                            },
+                                            "type":  "ApiConnection",
+                                            "inputs":  {
+                                                "body":  "@{variables('KQLDelete')}| where UserId contains \"@{items('For_each')?['UserId']}\"",
+                                                "host":  {
+                                                    "connection":  {
+                                                        "name":  "@parameters('$connections')['azuremonitorlogs']['connectionId']"
+                                                    }
+                                                },
+                                                "method":  "post",
+                                                "path":  "/queryData",
+                                                "queries":  {
+                                                    "resourcegroups":  "@parameters('RGName')",
+                                                    "resourcename":  "@parameters('LogAnalyticName')",
+                                                    "resourcetype":  "Log Analytics Workspace",
+                                                    "subscriptions":  "@parameters('SubscriptionID')",
+                                                    "timerange":  "set in query"
+                                                }
+                                            }
+                                        },
+                                        "Send_an_email_(V2)":  {
+                                            "runAfter":  {
+                                                "Create_CSV_table":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "ApiConnection",
+                                            "inputs":  {
+                                                "body":  {
+                                                    "Attachments":  [
+                                                        {
+                                                            "ContentBytes":  "@{base64(body('Create_CSV_table'))}",
+                                                            "Name":  "MassDelete.csv"
+                                                        }
+                                                    ],
+                                                    "Body":  "\u003cp\u003e@{outputs('Compose_-_Email_format')}\u003c/p\u003e",
+                                                    "Importance":  "Low",
+                                                    "Subject":  "Mass Delete Notification",
+                                                    "To":  "a.alsafar@qfcra.com"
+                                                },
+                                                "host":  {
+                                                    "connection":  {
+                                                        "name":  "@parameters('$connections')['office365']['connectionId']"
+                                                    }
+                                                },
+                                                "method":  "post",
+                                                "path":  "/v2/Mail"
+                                            }
+                                        }
+                                    },
+                                    "runAfter":  {
+                                    },
+                                    "type":  "Foreach",
+                                    "runtimeConfiguration":  {
+                                        "concurrency":  {
+                                            "repetitions":  1
+                                        }
+                                    }
+                                }
+                            },
+                            "runAfter":  {
+                                "Initialize_variable_-_KQLDelete":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "expression":  {
+                                "and":  [
+                                    {
+                                        "greater":  [
+                                            "@length(body('Parse_JSON_-_First_KQL')?['value'])",
+                                            0
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type":  "If"
+                        },
+                        "Condition_2":  {
+                            "actions":  {
+                                "For_each_2":  {
+                                    "foreach":  "@body('Parse_JSON_-_FirstKQLDownload')?['value']",
+                                    "actions":  {
+                                        "Compose_-_Mail_Format":  {
+                                            "runAfter":  {
+                                                "Compose_-_ManagerUPN":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "Compose",
+                                            "inputs":  "\u003c!DOCTYPE html\u003e\n\u003chtml lang=\"en\"\u003e\n\u003chead\u003e\n    \u003cmeta charset=\"UTF-8\"\u003e\n    \u003cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"\u003e\n    \u003ctitle\u003eSecurity Incident Notification\u003c/title\u003e\n    \u003cstyle\u003e\n        body {\n            font-family: Arial, sans-serif;\n            background-color: #f0f4f7;\n            margin: 0;\n            padding: 20px;\n            color: #333;\n        }\n        .container {\n            background-color: #fff;\n            border-radius: 10px;\n            padding: 20px;\n            max-width: 700px;\n            margin: 0 auto;\n            box-shadow: 0 4px 15px rgba(0,0,0,0.1);\n            border: 1px solid #e0e4e8;\n        }\n        .header {\n            text-align: center;\n            background-color: #A1263E;\n            color: white;\n            padding: 30px;\n            border-radius: 10px 10px 0 0;\n        }\n        .header strong {\n            font-size: 18pt;\n        }\n        .content {\n            padding: 30px 20px;\n            font-size: 14pt;\n            line-height: 1.8;\n        }\n        .content p {\n            margin-bottom: 20px;\n        }\n        .content strong {\n            font-size: 16pt;\n            color: #4c81d1;\n        }\n        .incident-details {\n            width: 100%;\n            border-collapse: collapse;\n            margin: 20px 0;\n        }\n        .incident-details th, .incident-details td {\n            border: 1px solid #ddd;\n            padding: 10px;\n            text-align: left;\n        }\n        .incident-details th {\n            background-color: #f7f9fb;\n            font-size: 13pt;\n            text-align: center;\n        }\n        .incident-details td {\n            font-size: 12pt;\n        }\n        .footer {\n            text-align: left;\n            padding: 20px;\n            font-size: 12pt;\n            color: #555;\n            border-top: 1px solid #ddd;\n        }\n        .footer a {\n            color: #4c81d1;\n            text-decoration: none;\n        }\n        .footer img {\n            margin-top: 20px;\n        }\n        .footer p {\n            margin: 5px 0;\n        }\n        .btn {\n            display: inline-block;\n            padding: 10px 20px;\n            font-size: 14pt;\n            color: #fff;\n            background-color: #4c81d1;\n            text-align: center;\n            border-radius: 5px;\n            text-decoration: none;\n            margin-top: 10px;\n        }\n        .btn:hover {\n            background-color: #3a6ba0;\n        }\n        .note {\n            font-size: 11pt;\n            color: #888;\n            margin-top: 20px;\n            border-left: 4px solid #f39c12;\n            padding-left: 10px;\n        }\n    \u003c/style\u003e\n\u003c/head\u003e\n\u003cbody\u003e\n    \u003cdiv class=\"container\"\u003e\n        \u003cdiv class=\"header\"\u003e\n            \u003cstrong\u003eIMPORTANT: Security Incident Notification\u003c/strong\u003e\n        \u003c/div\u003e\n        \n        \u003cdiv class=\"content\"\u003e\n            \u003cp\u003eDear User,\u003c/p\u003e\n            \u003cp\u003eOur security monitoring systems have detected the following anomaly relating to the services we provide to you.\u003c/p\u003e\n            \u003cp\u003e\u003cstrong\u003eAnomaly type:\u003c/strong\u003eMass download of files\u003c/p\u003e\n        \u003c/div\u003e\n\n        \u003ctable class=\"incident-details\"\u003e\n            \u003cthead\u003e\n                \u003ctr\u003e\n                    \u003cth colspan=\"2\"\u003eIncident Details\u003c/th\u003e\n                \u003c/tr\u003e\n            \u003c/thead\u003e\n            \u003ctbody\u003e\n                \u003ctr\u003e\n                    \u003ctd\u003e\u003cstrong\u003eAnomaly type:\u003c/strong\u003e\u003c/td\u003e\n                    \u003ctd\u003eMass download of files\u003c/td\u003e\n                \u003c/tr\u003e                       \n                \u003ctr\u003e\n                    \u003ctd\u003e\u003cstrong\u003eSummary\u003c/strong\u003e\u003c/td\u003e\n                    \u003ctd\u003eLarge number of files downloaded/accessed. A mass download alert does not always constitute an actual mass download, accessing or viewing files also raises this alert\n\u003cp\u003e\nAccessing a file or an email caches some data on the device. Forward the email to support@qfcra.com confirming if the activity is legitimate and provide the business justification for the same.\n\u003c/p\u003e\n\u003c/td\u003e\n                \u003c/tr\u003e            \n                    \u003ctd\u003e\u003cstrong\u003eFiles Accessed/Downloaded From:\u003c/strong\u003e\u003c/td\u003e\n                    \u003ctd\u003eReview File Attached.\u003c/td\u003e\n                \u003c/tr\u003e\n            \u003c/tbody\u003e\n        \u003c/table\u003e\n\n        \u003cdiv class=\"footer\"\u003e\n            \u003cp\u003e\u003cstrong\u003eCybersecurity Alerts\u003c/strong\u003e\u003c/p\u003e\n            \u003cp\u003eCyber Security Alerts and Notifications, IT Department\u003c/p\u003e\n            \n            \u003cimg src=\"https://raw.githubusercontent.com/RakeshPrasad21/SOC/main/mannai/images/QFCRA.png\" alt=\"QFCRA Logo\" height=\"60px\"\u003e\n            \u003cp\u003ePO Box 22989\u003c/br\u003eM +974 55409246\u003c/br\u003e\u003ca href=\"mailto:securityalerts@qfcra.com\"\u003esecurityalerts@QFCRA.COM\u003c/a\u003e | \u003ca href=\"https://www.qfcra.com\"\u003ewww.qfcra.com\u003c/a\u003e\u003c/p\u003e\n        \u003c/div\u003e\n\n        \u003cdiv class=\"note\"\u003e\n            \u003cp\u003e\u003cstrong\u003eReminder:\u003c/strong\u003e For your security, please ensure your devices are compliant with the latest security policies to prevent future incidents.\u003c/p\u003e\n        \u003c/div\u003e\n    \u003c/div\u003e\n\u003c/body\u003e\n\u003c/html\u003e"
+                                        },
+                                        "Compose_-_ManagerUPN":  {
+                                            "runAfter":  {
+                                                "Get_manager_(V2)_2":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "Compose",
+                                            "inputs":  "@body('Get_manager_(V2)_2')?['mail']"
+                                        },
+                                        "Create_CSV_table_2":  {
+                                            "runAfter":  {
+                                                "Compose_-_Mail_Format":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "Table",
+                                            "inputs":  {
+                                                "format":  "CSV",
+                                                "from":  "@body('Run_query_and_list_results_2')?['value']"
+                                            }
+                                        },
+                                        "Get_manager_(V2)_2":  {
+                                            "runAfter":  {
+                                                "Run_query_and_list_results_2":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "ApiConnection",
+                                            "inputs":  {
+                                                "host":  {
+                                                    "connection":  {
+                                                        "name":  "@parameters('$connections')['office365users']['connectionId']"
+                                                    }
+                                                },
+                                                "method":  "get",
+                                                "path":  "/codeless/v1.0/users/@{encodeURIComponent(items('For_each_2')?['UserId'])}/manager",
+                                                "queries":  {
+                                                    "$select":  "mail,userPrincipalName"
+                                                }
+                                            }
+                                        },
+                                        "Run_query_and_list_results_2":  {
+                                            "runAfter":  {
+                                            },
+                                            "type":  "ApiConnection",
+                                            "inputs":  {
+                                                "body":  "@{variables('KQLDownload')}| where UserId contains \"@{items('For_each_2')?['UserId']}\"",
+                                                "host":  {
+                                                    "connection":  {
+                                                        "name":  "@parameters('$connections')['azuremonitorlogs']['connectionId']"
+                                                    }
+                                                },
+                                                "method":  "post",
+                                                "path":  "/queryData",
+                                                "queries":  {
+                                                    "resourcegroups":  "@parameters('RGName')",
+                                                    "resourcename":  "@parameters('LogAnalyticName')",
+                                                    "resourcetype":  "Log Analytics Workspace",
+                                                    "subscriptions":  "@parameters('SubscriptionID')",
+                                                    "timerange":  "set in query"
+                                                }
+                                            }
+                                        },
+                                        "Send_an_email_(V2)_2":  {
+                                            "runAfter":  {
+                                                "Create_CSV_table_2":  [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type":  "ApiConnection",
+                                            "inputs":  {
+                                                "body":  {
+                                                    "Attachments":  [
+                                                        {
+                                                            "ContentBytes":  "@{base64(body('Create_CSV_table_2'))}",
+                                                            "Name":  "MassDownload.csv"
+                                                        }
+                                                    ],
+                                                    "Body":  "\u003cp\u003e@{outputs('Compose_-_Mail_Format')}\u003c/p\u003e",
+                                                    "Importance":  "Normal",
+                                                    "Subject":  "Mass Download Notification",
+                                                    "To":  "a.alsafar@qfcra.com"
+                                                },
+                                                "host":  {
+                                                    "connection":  {
+                                                        "name":  "@parameters('$connections')['office365']['connectionId']"
+                                                    }
+                                                },
+                                                "method":  "post",
+                                                "path":  "/v2/Mail"
+                                            }
+                                        }
+                                    },
+                                    "runAfter":  {
+                                    },
+                                    "type":  "Foreach",
+                                    "runtimeConfiguration":  {
+                                        "concurrency":  {
+                                            "repetitions":  1
+                                        }
+                                    }
+                                }
+                            },
+                            "runAfter":  {
+                                "Initialize_variable_-_KQLDownload":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "expression":  {
+                                "and":  [
+                                    {
+                                        "greater":  [
+                                            "@length(body('Parse_JSON_-_FirstKQLDownload')?['value'])",
+                                            0
+                                        ]
+                                    }
+                                ]
+                            },
+                            "type":  "If"
+                        },
+                        "Initialize_variable_-_FileCountThreshold":  {
+                            "runAfter":  {
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "FileCountThreshold",
+                                        "type":  "integer",
+                                        "value":  15
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_FirstKQLDelete":  {
+                            "runAfter":  {
+                                "Initialize_variable_-_UserWhiteList":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "FirstKQLDelete",
+                                        "type":  "string",
+                                        "value":  "let AzureRanges = externaldata(changeNumber: string, cloud: string, values: dynamic)\n    [\"https://raw.githubusercontent.com/microsoft/mstic/master/PublicFeeds/MSFTIPRanges/ServiceTags_Public.json\"] with(format='multijson')\n    | mv-expand values\n    | extend Name = values.name, AddressPrefixes = values.properties.addressPrefixes\n    | mv-expand AddressPrefixes\n    | summarize by tostring(AddressPrefixes);\nlet MatchedIPs = OfficeActivity\n    | where EventSource == \"SharePoint\"\n        and OfficeWorkload has_any(\"SharePoint\", \"OneDrive\")\n        and Operation has_any ('FolderDeletedFirstStageRecycleBin', 'FileDeletedFirstStageRecycleBin', 'FileVersionsAllDeleted', 'FileDeleted')\n    | evaluate ipv4_lookup(AzureRanges, ClientIP, AddressPrefixes)\n    | project ClientIP;\nlet userWhiteList =dynamic([\n    @{variables('UserWhiteList')}\n    ]);\nlet threshold = @{variables('FileCountThreshold')};\nOfficeActivity\n| where TimeGenerated \u003e= ago(1h)\n| where UserId !in (userWhiteList)\n| extend personalGroups = extract(\"(\\\\/+personal+\\\\/)\", 1, Site_Url)\n//Mass File Delete Sharepoint Personal Folder == \"\" or  Mass File Delete Sharepoint Shared Folder != \"\"\n| where personalGroups == \"\"\n//FileRecycled,FileDeleted\n| where EventSource == \"SharePoint\"\n    and OfficeWorkload has_any(\"SharePoint\", \"OneDrive\")\n    and Operation has_any ('FolderDeletedFirstStageRecycleBin', 'FileDeletedFirstStageRecycleBin', 'FileVersionsAllDeleted', 'FileDeleted')\n| summarize\n    count_distinct_OfficeObjectId=dcount(OfficeObjectId),\n    fileslist=make_set(OfficeObjectId, 10000),\n    workload=make_set(OfficeWorkload),\n    siteUrl = make_set(Site_Url)\n    by UserId, ClientIP\n//| where ClientIP !in (MatchedIPs)\n| where count_distinct_OfficeObjectId \u003e= threshold\n| distinct UserId"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_FirstKQLDownload":  {
+                            "runAfter":  {
+                                "Initialize_variable_-_UserWhiteList":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "FirstKQLDownload",
+                                        "type":  "string",
+                                        "value":  "let AzureRanges = externaldata(changeNumber: string, cloud: string, values: dynamic)\n    [\"https://raw.githubusercontent.com/microsoft/mstic/master/PublicFeeds/MSFTIPRanges/ServiceTags_Public.json\"] with(format='multijson')\n    | mv-expand values\n    | extend Name = values.name, AddressPrefixes = values.properties.addressPrefixes\n    | mv-expand AddressPrefixes\n    | summarize by tostring(AddressPrefixes);\nlet MatchedIPs = OfficeActivity\n    | where EventSource == \"SharePoint\"\n        and OfficeWorkload has_any(\"SharePoint\", \"OneDrive\")\n        and Operation has_any ('FileDownloaded', 'FileSyncDownloadedFull')\n    | evaluate ipv4_lookup(AzureRanges, ClientIP, AddressPrefixes)\n    | project ClientIP;\nlet userWhiteList =dynamic([\n    @{variables('UserWhiteList')}\n    ]);\nlet threshold = @{variables('FileCountThreshold')};\nOfficeActivity\n| where TimeGenerated \u003e= ago(1h)\n| where UserId !in (userWhiteList)\n| extend personalGroups = extract(\"(\\\\/+personal+\\\\/)\", 1, Site_Url)\n//Mass File Delete Sharepoint Personal Folder == \"\" or  Mass File Delete Sharepoint Shared Folder != \"\"\n| where personalGroups == \"\"\n//FileRecycled,FileDeleted\n| where EventSource == \"SharePoint\"\n    and OfficeWorkload has_any(\"SharePoint\", \"OneDrive\")\n    and Operation has_any ('FileDownloaded', 'FileSyncDownloadedFull')\n| summarize\n    count_distinct_OfficeObjectId=dcount(OfficeObjectId),\n    fileslist=make_set(OfficeObjectId, 10000),\n    workload=make_set(OfficeWorkload),\n    siteUrl = make_set(Site_Url)\n    by UserId, ClientIP\n//| where ClientIP !in (MatchedIPs)\n| where count_distinct_OfficeObjectId \u003e= threshold\n| distinct UserId"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_KQLDelete":  {
+                            "runAfter":  {
+                                "Parse_JSON_-_First_KQL":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "KQLDelete",
+                                        "type":  "string",
+                                        "value":  "let AzureRanges = externaldata(changeNumber: string, cloud: string, values: dynamic)\n    [\"https://raw.githubusercontent.com/microsoft/mstic/master/PublicFeeds/MSFTIPRanges/ServiceTags_Public.json\"] with(format='multijson')\n    | mv-expand values\n    | extend Name = values.name, AddressPrefixes = values.properties.addressPrefixes\n    | mv-expand AddressPrefixes\n    | summarize by tostring(AddressPrefixes);\nlet MatchedIPs = OfficeActivity\n    | where EventSource == \"SharePoint\"\n        and OfficeWorkload has_any(\"SharePoint\", \"OneDrive\")\n        and Operation has_any ('FolderDeletedFirstStageRecycleBin', 'FileDeletedFirstStageRecycleBin', 'FileVersionsAllDeleted', 'FileDeleted')\n    | evaluate ipv4_lookup(AzureRanges, ClientIP, AddressPrefixes)\n    | project ClientIP;\nlet userWhiteList =dynamic([\n    \"app@sharepoint\"\n    ]);\nlet threshold = 10;\nOfficeActivity\n| where TimeGenerated \u003e= ago(1h)\n| where UserId !in (userWhiteList)\n| extend personalGroups = extract(\"(\\\\/+personal+\\\\/)\", 1, Site_Url)\n//Mass File Delete Sharepoint Personal Folder == \"\" or  Mass File Delete Sharepoint Shared Folder != \"\"\n| where personalGroups == \"\"\n//FileRecycled,FileDeleted\n| where EventSource == \"SharePoint\"\n    and OfficeWorkload has_any(\"SharePoint\", \"OneDrive\")\n    and Operation has_any ('FileDownloaded', 'FileSyncDownloadedFull', 'FolderDeletedFirstStageRecycleBin', 'FileDeletedFirstStageRecycleBin', 'FileVersionsAllDeleted', 'FileDeleted')\n//| where ClientIP !in (MatchedIPs)"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_KQLDownload":  {
+                            "runAfter":  {
+                                "Parse_JSON_-_FirstKQLDownload":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "KQLDownload",
+                                        "type":  "string",
+                                        "value":  "let AzureRanges = externaldata(changeNumber: string, cloud: string, values: dynamic)\n    [\"https://raw.githubusercontent.com/microsoft/mstic/master/PublicFeeds/MSFTIPRanges/ServiceTags_Public.json\"] with(format='multijson')\n    | mv-expand values\n    | extend Name = values.name, AddressPrefixes = values.properties.addressPrefixes\n    | mv-expand AddressPrefixes\n    | summarize by tostring(AddressPrefixes);\nlet MatchedIPs = OfficeActivity\n    | where EventSource == \"SharePoint\"\n        and OfficeWorkload has_any(\"SharePoint\", \"OneDrive\")\n        and Operation has_any ('FileDownloaded', 'FileSyncDownloadedFull')\n    | evaluate ipv4_lookup(AzureRanges, ClientIP, AddressPrefixes)\n    | project ClientIP;\nlet userWhiteList =dynamic([\n    \"app@sharepoint\"\n    ]);\nlet threshold = 10;\nOfficeActivity\n| where TimeGenerated \u003e= ago(1h)\n| where UserId !in (userWhiteList)\n| extend personalGroups = extract(\"(\\\\/+personal+\\\\/)\", 1, Site_Url)\n//Mass File Delete Sharepoint Personal Folder == \"\" or  Mass File Delete Sharepoint Shared Folder != \"\"\n| where personalGroups == \"\"\n//FileRecycled,FileDeleted\n| where EventSource == \"SharePoint\"\n    and OfficeWorkload has_any(\"SharePoint\", \"OneDrive\")\n    and Operation has_any ('FileDownloaded', 'FileSyncDownloadedFull', 'FolderDeletedFirstStageRecycleBin', 'FileDeletedFirstStageRecycleBin', 'FileVersionsAllDeleted', 'FileDeleted')\n//| where ClientIP !in (MatchedIPs)"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_-_UserWhiteList":  {
+                            "runAfter":  {
+                                "Initialize_variable_-_FileCountThreshold":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "InitializeVariable",
+                            "inputs":  {
+                                "variables":  [
+                                    {
+                                        "name":  "UserWhiteList",
+                                        "type":  "string",
+                                        "value":  "\"app@sharepoint\", \"Purview Data Lifecycle Management service - PHL clean-up\""
+                                    }
+                                ]
+                            }
+                        },
+                        "Parse_JSON_-_FirstKQLDownload":  {
+                            "runAfter":  {
+                                "Run_query_and_list_results_-_FirstKQLDownload":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "ParseJson",
+                            "inputs":  {
+                                "content":  "@body('Run_query_and_list_results_-_FirstKQLDownload')",
+                                "schema":  {
+                                    "properties":  {
+                                        "value":  {
+                                            "items":  {
+                                                "properties":  {
+                                                    "UserId":  {
+                                                        "type":  "string"
+                                                    }
+                                                },
+                                                "required":  [
+                                                    "UserId"
+                                                ],
+                                                "type":  "object"
+                                            },
+                                            "type":  "array"
+                                        }
+                                    },
+                                    "type":  "object"
+                                }
+                            }
+                        },
+                        "Parse_JSON_-_First_KQL":  {
+                            "runAfter":  {
+                                "Run_query_and_list_results_-_FirstKQL":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "ParseJson",
+                            "inputs":  {
+                                "content":  "@body('Run_query_and_list_results_-_FirstKQL')",
+                                "schema":  {
+                                    "properties":  {
+                                        "value":  {
+                                            "items":  {
+                                                "properties":  {
+                                                    "UserId":  {
+                                                        "type":  "string"
+                                                    }
+                                                },
+                                                "required":  [
+                                                    "UserId"
+                                                ],
+                                                "type":  "object"
+                                            },
+                                            "type":  "array"
+                                        }
+                                    },
+                                    "type":  "object"
+                                }
+                            }
+                        },
+                        "Run_query_and_list_results_-_FirstKQL":  {
+                            "runAfter":  {
+                                "Initialize_variable_-_FirstKQLDelete":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "ApiConnection",
+                            "inputs":  {
+                                "body":  "@variables('FirstKQLDelete')",
+                                "host":  {
+                                    "connection":  {
+                                        "name":  "@parameters('$connections')['azuremonitorlogs']['connectionId']"
+                                    }
+                                },
+                                "method":  "post",
+                                "path":  "/queryData",
+                                "queries":  {
+                                    "resourcegroups":  "@parameters('RGName')",
+                                    "resourcename":  "@parameters('LogAnalyticName')",
+                                    "resourcetype":  "Log Analytics Workspace",
+                                    "subscriptions":  "@parameters('SubscriptionID')",
+                                    "timerange":  "set in query"
+                                }
+                            }
+                        },
+                        "Run_query_and_list_results_-_FirstKQLDownload":  {
+                            "runAfter":  {
+                                "Initialize_variable_-_FirstKQLDownload":  [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type":  "ApiConnection",
+                            "inputs":  {
+                                "body":  "@variables('FirstKQLDownload')",
+                                "host":  {
+                                    "connection":  {
+                                        "name":  "@parameters('$connections')['azuremonitorlogs']['connectionId']"
+                                    }
+                                },
+                                "method":  "post",
+                                "path":  "/queryData",
+                                "queries":  {
+                                    "resourcegroups":  "@parameters('RGName')",
+                                    "resourcename":  "@parameters('LogAnalyticName')",
+                                    "resourcetype":  "Log Analytics Workspace",
+                                    "subscriptions":  "@parameters('SubscriptionID')",
+                                    "timerange":  "set in query"
+                                }
+                            }
+                        }
+                    },
+                    "outputs":  {
+                    }
+                },
+                "parameters":  {
+                    "$connections":  {
+                        "value":  {
+                            "azuremonitorlogs":  {
+                                "connectionId":  "[resourceId('Microsoft.Web/connections', variables('AzuremonitorlogsConnectionName'))]",
+                                "connectionName":  "[variables('AzuremonitorlogsConnectionName')]",
+                                "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Azuremonitorlogs')]"
+                            },
+                            "office365":  {
+                                "connectionId":  "[resourceId('Microsoft.Web/connections', variables('Office365ConnectionName'))]",
+                                "connectionName":  "[variables('Office365ConnectionName')]",
+                                "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Office365')]"
+                            },
+                            "office365users":  {
+                                "connectionId":  "[resourceId('Microsoft.Web/connections', variables('Office365usersConnectionName'))]",
+                                "connectionName":  "[variables('Office365usersConnectionName')]",
+                                "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Office365users')]"
+                            }
+                        }
+                    }
+                }
+            },
+            "name":  "[parameters('PlaybookName')]",
+            "type":  "Microsoft.Logic/workflows",
+            "location":  "[resourceGroup().location]",
+            "tags":  {
+                "hidden-SentinelTemplateName":  "Notification-Mass-Download-Deleted",
+                "hidden-SentinelTemplateVersion":  "1.0"
+            },
+            "identity":  {
+                "type":  "SystemAssigned"
+            },
+            "apiVersion":  "2017-07-01",
+            "dependsOn":  [
+                "[resourceId('Microsoft.Web/connections', variables('AzuremonitorlogsConnectionName'))]",
+                "[resourceId('Microsoft.Web/connections', variables('Office365ConnectionName'))]",
+                "[resourceId('Microsoft.Web/connections', variables('Office365usersConnectionName'))]"
+            ]
+        },
+        {
+            "type":  "Microsoft.Web/connections",
+            "apiVersion":  "2016-06-01",
+            "name":  "[variables('AzuremonitorlogsConnectionName')]",
+            "location":  "[resourceGroup().location]",
+            "kind":  "V1",
+            "properties":  {
+                "displayName":  "[variables('AzuremonitorlogsConnectionName')]",
+                "customParameterValues":  {
+                },
+                "api":  {
+                    "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Azuremonitorlogs')]"
+                }
+            }
+        },
+        {
+            "type":  "Microsoft.Web/connections",
+            "apiVersion":  "2016-06-01",
+            "name":  "[variables('Office365ConnectionName')]",
+            "location":  "[resourceGroup().location]",
+            "kind":  "V1",
+            "properties":  {
+                "displayName":  "[variables('Office365ConnectionName')]",
+                "customParameterValues":  {
+                },
+                "api":  {
+                    "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Office365')]"
+                }
+            }
+        },
+        {
+            "type":  "Microsoft.Web/connections",
+            "apiVersion":  "2016-06-01",
+            "name":  "[variables('Office365usersConnectionName')]",
+            "location":  "[resourceGroup().location]",
+            "kind":  "V1",
+            "properties":  {
+                "displayName":  "[variables('Office365usersConnectionName')]",
+                "customParameterValues":  {
+                },
+                "api":  {
+                    "id":  "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/Office365users')]"
+                }
+            }
+        }
+    ]
+}
