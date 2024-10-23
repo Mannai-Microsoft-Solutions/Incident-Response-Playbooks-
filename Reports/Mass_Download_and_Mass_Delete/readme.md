@@ -33,3 +33,5 @@ OfficeActivity
 | extend AccountName = tostring(split(UserId, "@")[0]), AccountUPNSuffix = tostring(split(UserId, "@")[1])
 ```
 
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/[https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2FAzure-Sentinel%2Fmaster%2FPlaybooks%2FSend-ConnectorHealthStatus%2Fazuredeploy.json](https://raw.githubusercontent.com/Mannai-Microsoft-Solutions/Incident-Response-Playbooks/refs/heads/main/Reports/Mass_Download_and_Mass_Delete/azuredeploy.json?token=GHSAT0AAAAAACYLKDRVT7GQPW4OTNXQXDW4ZYYRIFA))
+
