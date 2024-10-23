@@ -1,5 +1,7 @@
 ## Mass Download and Mass Delete Playbooks 
 
+The Logic App leverages underlying queries to provide you with an option to configure “Push notifications” to e-mail or a Microsoft Teams channel based for mass download and delete activity in the Sharepoint using officeActivity table. Below is a detailed description of how the rule and the logic app are put together
+
 ### KQL
 ```
 let AzureRanges = externaldata(changeNumber: string, cloud: string, values: dynamic)
