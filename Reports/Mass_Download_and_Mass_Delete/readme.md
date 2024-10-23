@@ -2,6 +2,8 @@
 
 The Logic App leverages underlying queries to provide you with an option to configure “Push notifications” to e-mail or a Microsoft Teams channel based for mass download and delete activity in the Sharepoint using officeActivity table. Below is a detailed description of how the rule and the logic app are put together
 
+<em>The KQL query below will be added to this step in the Logic App and will execute against your workspace. You can modify the threshold values to suit your needs.</em>
+
 ### KQL
 ```
 let AzureRanges = externaldata(changeNumber: string, cloud: string, values: dynamic)
