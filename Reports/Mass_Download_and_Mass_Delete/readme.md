@@ -9,7 +9,7 @@ let AzureRanges = externaldata(changeNumber: string, cloud: string, values: dyna
 | mv-expand AddressPrefixes
 | summarize by tostring(AddressPrefixes);
 let MatchedIPs = OfficeActivity
-| where EventSource == "SharePoint" and OfficeWorkload has_any("SharePoint", "OneDrive") and Operation has_any ('FileDownloaded', 'FileSyncDownloadedFull', 'FileRecycled', 'FolderRecycled', 'FolderDeletedFirstStageRecycleBin', 'FileDeletedFirstStageRecycleBin', 'FileVersionsAllDeleted', 'FileDeleted')
+| where EventSource == "SharePoint" and OfficeWorkload has_any("SharePoint", "OneDrive") and Operation has_any ('FileDownloaded', 'FileSyncDownloadedFull', 'FolderDeletedFirstStageRecycleBin', 'FileVersionsAllDeleted', 'FileDeleted')
 | evaluate ipv4_lookup(AzureRanges, ClientIP, AddressPrefixes)
 | project ClientIP;
 let userWhiteList =dynamic([
@@ -22,7 +22,7 @@ OfficeActivity
 //Mass File Delete Sharepoint Personal Folder == "" or  Mass File Delete Sharepoint Shared Folder != ""
 | where personalGroups == ""
 //FileRecycled,FileDeleted
-| where EventSource == "SharePoint" and OfficeWorkload has_any("SharePoint", "OneDrive") and Operation has_any ('FileDownloaded', 'FileSyncDownloadedFull', 'FileRecycled', 'FolderRecycled', 'FolderDeletedFirstStageRecycleBin', 'FileDeletedFirstStageRecycleBin', 'FileVersionsAllDeleted', 'FileDeleted')
+| where EventSource == "SharePoint" and OfficeWorkload has_any("SharePoint", "OneDrive") and Operation has_any ('FileDownloaded', 'FileSyncDownloadedFull','FolderDeletedFirstStageRecycleBin', 'FileVersionsAllDeleted', 'FileDeleted')
 | summarize count_distinct_OfficeObjectId=dcount(OfficeObjectId), fileslist=make_set(OfficeObjectId, 10000),workload=make_set(OfficeWorkload),siteUrl = make_set(Site_Url) by UserId,ClientIP
 | where ClientIP !in (MatchedIPs)
 | where count_distinct_OfficeObjectId >= threshold
